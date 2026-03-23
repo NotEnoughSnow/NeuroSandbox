@@ -447,5 +447,8 @@ pip-selfcheck.json
 
 # resources
 /data
+/notebooks/data
+
+/experimental
 
 # End of https://www.toptal.com/developers/gitignore/api/python,intellij+all,intellij,pycharm,data,venv
