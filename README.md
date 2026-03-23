@@ -12,7 +12,7 @@ NeuroSandbox is an evolving repository where I study and implement concepts from
 
 Notebooks covering the foundational building blocks of computational neuroscience and mainly focusing on visualizing the core concepts.
 
-### [`Spatiotemporal Computations of an Excitable and Plastic Brain/`](./Spatiotemporal-plasticity/)
+### [`Spatiotemporal Computations of an Excitable and Plastic Brain/`](./spatiotemporal-plasticity/)
 
 Implementation of the paper **"Spatiotemporal Computations of an Excitable and Plastic Brain: Neuronal Plasticity Leads to Noise-Robust and Noise-Constructive Computations"**
 
