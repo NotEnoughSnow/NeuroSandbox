@@ -109,12 +109,16 @@ def run_task(tau_array, network_types, hyperparameters, task_name, n_networks=10
             # list of lists: one list per tau, each containing n_networks values
             results[metric][nt] = [[] for _ in tau_array]
 
+
     performance_temp = []
 
     for network_idx in range(n_networks):
 
         for t in tau_array:
+
             print(f"For timelag {t} --------")
+
+            hyperparameters["tau"] = t
 
             for nt in network_types:
 
@@ -127,22 +131,17 @@ def run_task(tau_array, network_types, hyperparameters, task_name, n_networks=10
 
                 x_out = train_phase.run(w=w, h=h, x=x_per, external_drive=drive, network=network, hp=hyperparameters)
 
-                print("x_out : ", x_out)
-
                 performance = test_phase.run(w=w, h=h, x=x_per, w_out=x_out, external_drive=drive, network=network, hp=hyperparameters)
 
                 eval = evaluate.Evaluator(network=network, external_drive=drive, hp=hyperparameters)
                 H, MI = eval.generate_metrics(w=w, h=h)
 
-                results["H"][nt][t].append(H)
-                results["MI"][nt][t].append(MI)
-                results["performance"][nt][t].append(performance)
+                #results["H"][nt][t].append(H)
+                #results["MI"][nt][t].append(MI)
+                #results["performance"][nt][t].append(performance)
 
 
                 performance_temp.append(performance)
-
-    print(performance_temp)
-
 
     #print(f"performance for SIP :{[float(x) for x in results['performance']['SIP']]}")
     #print(f"H for SIP :{[float(x) for x in results['H']['SIP']]}")
@@ -150,7 +149,7 @@ def run_task(tau_array, network_types, hyperparameters, task_name, n_networks=10
 
     #graph_results(results, tau_array)
 
-    return results
+    return performance_temp
 
 
     '''
@@ -198,8 +197,8 @@ if __name__ == "__main__":
                           timesteps["train"] +
                           timesteps["train"])
 
-    #tau_array = list(range(-8,9))
-    tau_array = [-1]
+    tau_array = list(range(-8,9))
+    #tau_array = [7]
     print(tau_array)
 
     hyperparameters = {
@@ -214,7 +213,6 @@ if __name__ == "__main__":
         "n_symbols": 4,  # A, B, C, D
         "rf_size": 15,  # receptive field size for each symbol
         "drive_strength": 0.25,  # input drive value
-        "tau": -1,  # time lag
 
         "timesteps": timesteps,
 
@@ -234,13 +232,39 @@ if __name__ == "__main__":
         n_networks=1,
     )
 
+
+    print(results_raw)
+
+    plt.figure(figsize=(6, 5))
+
+    # Plot performance
+    plt.plot(tau_array, results_raw,
+             color='blue', marker='o', linestyle='-', markersize=4,
+             label='Performance')
+
+    # Add chance level line at 25%
+    plt.axhline(y=25, color='red', linestyle='--', label='Chance level (25%)', alpha=0.7)
+
+    # Labels and formatting
+    plt.xlabel('Time lag τ')
+    plt.ylabel('Performance (%)')
+    plt.title('Performance vs Time Lag')
+    plt.ylim(0, 105)
+    plt.legend(loc='best')
+    plt.grid(True, alpha=0.3)
+
+    plt.tight_layout()
+    plt.show()
+
     # process results into single arrays
-    results = process_results(results_raw, ["SIP"], tau_array)
+    #results = process_results(results_raw, ["SIP"], tau_array)
 
 
-    print(f"performance for SIP :{[float(x) for x in results['performance']['SIP']]}")
-    print(f"H for SIP :{[float(x) for x in results['H']['SIP']]}")
-    print(f"MI for SIP :{[float(x) for x in results['MI']['SIP']]}")
+
+
+    #print(f"performance for SIP :{[float(x) for x in results['performance']['SIP']]}")
+    #print(f"H for SIP :{[float(x) for x in results['H']['SIP']]}")
+    #print(f"MI for SIP :{[float(x) for x in results['MI']['SIP']]}")
 
     # graph results
     # expects results dictionary, with items performance, H, and MI.
@@ -258,5 +282,5 @@ if __name__ == "__main__":
     }
     r1 = [H values for each timelag: 15 values]
     '''
-    graph_results(results, tau_array)
+    #graph_results(results, tau_array)
 

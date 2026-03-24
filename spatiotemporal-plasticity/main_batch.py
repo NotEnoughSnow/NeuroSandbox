@@ -144,8 +144,8 @@ if __name__ == "__main__":
                           timesteps["train"] +
                           timesteps["train"])
 
-    #tau_array = list(range(-8,9))
-    tau_array = [-1]
+    tau_array = list(range(-8,9))
+    #tau_array = [-1]
     print(tau_array)
 
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
@@ -163,7 +163,6 @@ if __name__ == "__main__":
         "n_symbols": 4,  # A, B, C, D
         "rf_size": 15,  # receptive field size for each symbol
         "drive_strength": 0.25,  # input drive value
-        "tau": -1,  # time lag
 
         "timesteps": timesteps,
 
@@ -173,7 +172,7 @@ if __name__ == "__main__":
         "pi": 12,
 
         # number of networks to run paralelly
-        "n_networks": 1,
+        "n_networks": 100,
 
         "device": device,
 
@@ -195,6 +194,8 @@ if __name__ == "__main__":
     for t in tau_array:
         print(f"For timelag {t} --------")
 
+        hyperparameters["tau"] = t
+
         drive = Drive_batch(hp=hyperparameters)
         network = Kwta_RN_batch(hp=hyperparameters)
 
@@ -204,7 +205,6 @@ if __name__ == "__main__":
 
 
         x_out = train_phase.run_batch(W=w, H=h, X=x_per, external_drive=drive, network=network, hp=hyperparameters)
-        print("x_out : ",x_out[0])
 
 
         performance = test_phase.run_batch(W=w, H=h, X=x_per, W_out=x_out, external_drive=drive, network=network, hp=hyperparameters)
@@ -221,7 +221,29 @@ if __name__ == "__main__":
 
         performance_temp.append(performance)
 
-    print(performance_temp)
+    performance_array = np.mean(performance_temp, axis=1)
+    print(performance_array)
+
+    plt.figure(figsize=(6, 5))
+
+    # Plot performance
+    plt.plot(tau_array, performance_array,
+             color='blue', marker='o', linestyle='-', markersize=4,
+             label='Performance')
+
+    # Add chance level line at 25%
+    plt.axhline(y=25, color='red', linestyle='--', label='Chance level (25%)', alpha=0.7)
+
+    # Labels and formatting
+    plt.xlabel('Time lag τ')
+    plt.ylabel('Performance (%)')
+    plt.title('Performance vs Time Lag')
+    plt.ylim(0, 105)
+    plt.legend(loc='best')
+    plt.grid(True, alpha=0.3)
+
+    plt.tight_layout()
+    plt.show()
 
 
 

@@ -20,11 +20,21 @@ def run(w, h, x, w_out, network, external_drive, hp):
 
     symbols = external_drive.generate_symbols(test_timesteps)
 
+    #print("3move at plasticity ", symbols)
+
+
     for t in range(test_timesteps):
         drive = external_drive.get_symbol(symbols, t)
 
         pre_activation = w @ x - h + drive
         x = network.kWTA(pre_activation, k=k)
+
+        #print(f"------- {t}")
+        #print("tau ", tau)
+        #print("label_t ", t + tau)
+        #print("expected ", symbols[t + tau])
+        #print("outputted ", x)
+
 
         label_t = t + tau
         if 0 <= label_t < len(symbols):  # ensure we have a valid label index
@@ -83,11 +93,11 @@ def run_batch(W, H, X, W_out, network, external_drive, hp):
         pre_activation = torch.bmm(W, X.unsqueeze(-1)).squeeze(-1) - H + drive
 
         #x = network.kWTA(pre_activation, k=k)
-        X_new = network.kWTA_batch_torch(pre_activation, k=hp['k'])
+        X = network.kWTA_batch_torch(pre_activation, k=hp['k'])
 
         label_t = t + tau
         if 0 <= label_t < len(symbols):
-            states_list.append(X_new.cpu().numpy())  # (N, n)
+            states_list.append(X.cpu().numpy())  # (N, n)
             labels_list.append(symbols[label_t])  # (N,) - one label per network
 
     states = np.array(states_list)    # (T_valid, N, n)

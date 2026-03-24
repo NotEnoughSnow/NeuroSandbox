@@ -28,6 +28,8 @@ def run(external_drive, network, hp):
 
     symbols = external_drive.generate_symbols(plasticity_timesteps)
 
+    print("3move at plasticity ", symbols)
+
     for t in range(plasticity_timesteps):
 
 
@@ -137,6 +139,8 @@ def run_batch(external_drive, network, hp):
     all_drives = external_drive.precompute_all_drives(symbols)  # shape (t_plasticity, N, n)
     all_drives = torch.tensor(all_drives, dtype=torch.float64, device=device)
 
+    #print("3move ", symbols)
+
     for t in range(plasticity_timesteps):
 
 
@@ -148,7 +152,6 @@ def run_batch(external_drive, network, hp):
         # X shape: (N, n) → unsqueeze to (N, n, 1) for bmm
         pre_activation = torch.bmm(W, X.unsqueeze(-1)).squeeze(-1) - H + drive
         # result shape: (N, n)
-
 
         # 3. apply kWTA: set top k pre-activations to 1, rest to 0
         X_new = network.kWTA_batch_torch(pre_activation, k=hp['k'])
