@@ -2,31 +2,6 @@
 import numpy as np
 import torch
 
-def run(x, hp):
-
-    k = hp["k"]
-    pi = hp["pi"]
-    verbosity = hp["verbosity"]
-
-    x_end = x.copy()  # final state after plasticity
-
-    firing = np.where(x_end == 1)[0]  # indices where x_end == 1
-    silent = np.where(x_end == 0)[0]  # indices where x_end == 0
-
-    flip_off = np.random.choice(firing, size=pi, replace=False)  # pi neurons stop firing
-    flip_on = np.random.choice(silent, size=pi, replace=False)  # pi neurons start firing
-
-    x_purturb = x_end.copy()
-    x_purturb[flip_off] = 0
-    x_purturb[flip_on] = 1
-
-    assert x_purturb.sum() == k, "Perturbed state must still have exactly k active neurons"
-    if verbosity == 1:
-        print("Perturbed initial state:", x_purturb)
-
-    print("Done running perturbation.")
-
-    return x_purturb
 
 
 def run_batch(x, hp):
