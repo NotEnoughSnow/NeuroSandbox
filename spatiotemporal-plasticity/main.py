@@ -1,6 +1,7 @@
 import numpy as np
 from network import Kwta_RN_batch
 from external_drive import Drive_batch
+from external_drive import Drive_batch_parity
 from phases import plasticity_phase
 from phases import pertubation_phase
 from phases import train_phase
@@ -53,7 +54,7 @@ if __name__ == "__main__":
         "pi": 12,
 
         # number of networks to run paralelly
-        "n_networks": 1,
+        "n_networks": 10,
 
         "device": device,
 
@@ -62,6 +63,9 @@ if __name__ == "__main__":
     network_types = ["SIP"]
     n_networks = hyperparameters["n_networks"]
 
+    # RAND, MARKOV, PARITY
+    hyperparameters["task"] = "MARKOV"
+
     performance_temp = []
 
     for t in tau_array:
@@ -69,7 +73,11 @@ if __name__ == "__main__":
 
         hyperparameters["tau"] = t
 
-        drive = Drive_batch(hp=hyperparameters)
+        if hyperparameters["task"] == "PARITY":
+            drive = Drive_batch_parity(hp=hyperparameters)
+        else:
+            drive = Drive_batch(hp=hyperparameters)
+
         network = Kwta_RN_batch(hp=hyperparameters)
 
         w, h, x_p = plasticity_phase.run_batch(external_drive=drive, network=network, hp=hyperparameters)

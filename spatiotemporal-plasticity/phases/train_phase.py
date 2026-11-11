@@ -5,34 +5,16 @@ import torch
 
 def run_batch(W, H, X, external_drive, network, hp):
 
-    train_timesteps = hp["timesteps"]["train"]
     k = hp["k"]
     n = hp["n"]
-    tau = hp["tau"]
     n_symbols = hp["n_symbols"]
     verbosity = hp["verbosity"]
-    device = hp["device"]
     n_networks = hp["n_networks"]
 
-    states_list = [] # to store states for analysis
-    labels_list = [] # to store corresponding symbols for analysis
-
-    symbols = external_drive.generate_symbols(train_timesteps)
-    all_drives = external_drive.precompute_all_drives(symbols)  # shape (t_plasticity, N, n)
-    all_drives = torch.tensor(all_drives, dtype=torch.float64, device=device)
-
-    for t in range(train_timesteps):
-
-        drive = all_drives[t]
-
-        pre_activation = torch.bmm(W, X.unsqueeze(-1)).squeeze(-1) - H + drive
-
-        X = network.kWTA_batch_torch(pre_activation, k=hp['k'])
-
-        label_t = t + tau
-        if 0 <= label_t < len(symbols):
-            states_list.append(X.cpu().numpy())  # (N, n)
-            labels_list.append(symbols[label_t])  # (N,) - one label per network
+    if hp["task"] == "PARITY":
+        states_list, labels_list = train_parity(W, H, X, external_drive, network, hp)
+    else:
+        states_list, labels_list = train(W, H, X, external_drive, network, hp)
 
     print("Done training.")
 
@@ -58,3 +40,63 @@ def run_batch(W, H, X, external_drive, network, hp):
 
     return W_out
 
+
+def train(W, H, X, external_drive, network, hp):
+
+    train_timesteps = hp["timesteps"]["train"]
+    device = hp["device"]
+    tau = hp["tau"]
+
+
+    states_list = [] # to store states for analysis
+    labels_list = [] # to store corresponding symbols for analysis
+
+    randomize = True if hp["task"] == "RAND" else False
+    symbols = external_drive.generate_symbols(train_timesteps, randomize)
+    all_drives = external_drive.precompute_all_drives(symbols)  # shape (t_plasticity, N, n)
+    all_drives = torch.tensor(all_drives, dtype=torch.float64, device=device)
+
+    for t in range(train_timesteps):
+
+        drive = all_drives[t]
+
+        pre_activation = torch.bmm(W, X.unsqueeze(-1)).squeeze(-1) - H + drive
+
+        X = network.kWTA_batch_torch(pre_activation, k=hp['k'])
+
+        label_t = t + tau
+        if 0 <= label_t < len(symbols):
+            states_list.append(X.cpu().numpy())  # (N, n)
+            labels_list.append(symbols[label_t])  # (N,) - one label per network
+
+    return states_list, labels_list
+
+def train_parity(W, H, X, external_drive, network, hp):
+
+    train_timesteps = hp["timesteps"]["train"]
+    device = hp["device"]
+    tau = hp["tau"]
+
+
+    states_list = [] # to store states for analysis
+    labels_list = [] # to store corresponding symbols for analysis
+
+    symbols = external_drive.generate_symbols(train_timesteps)
+    all_drives = external_drive.precompute_all_drives(symbols)  # shape (t_plasticity, N, n)
+    all_drives = torch.tensor(all_drives, dtype=torch.float64, device=device)
+
+    for t in range(train_timesteps):
+
+        drive = all_drives[t]
+
+        pre_activation = torch.bmm(W, X.unsqueeze(-1)).squeeze(-1) - H + drive
+
+        X = network.kWTA_batch_torch(pre_activation, k=hp['k'])
+
+        label_t = t + tau
+
+        if 2 <= t and 0 <= label_t < len(symbols):
+            states_list.append(X.cpu().numpy())  # (N, n)
+            labels_list.append(symbols[t] ^ symbols[t-1] ^ symbols[t-2])  # (N,) - one label per network
+
+    return states_list, labels_list

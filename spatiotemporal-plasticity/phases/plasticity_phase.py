@@ -22,7 +22,13 @@ def run_batch(external_drive, network, hp):
 
     diag_idx = torch.arange(n, device=device)
 
-    symbols = external_drive.generate_symbols(plasticity_timesteps)
+    randomize = True if (hp["task"] == "RAND" or hp["task"] == "PARITY") else False
+
+    if hp["task"] == "PARITY":
+        symbols = external_drive.generate_symbols(plasticity_timesteps)
+    else:
+        symbols = external_drive.generate_symbols(plasticity_timesteps, randomize)
+
     all_drives = external_drive.precompute_all_drives(symbols)  # shape (t_plasticity, N, n)
     all_drives = torch.tensor(all_drives, dtype=torch.float64, device=device)
 
